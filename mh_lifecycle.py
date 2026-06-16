@@ -547,7 +547,7 @@ def run(keep_partial=True, log_scale=True, sale_model=None):
     for g in TRAIN:
         others={k:v for k,v in panels.items() if k!=g and v["t"].min()<=panels[g]["t"].max()}
         sp=build_spillover(panels[g],others)
-        m=MHModel(panels[g]).fit(spill=sp); ci=bootstrap(m,sp,n=250)
+        m=MHModel(panels[g]).fit(spill=sp); ci=bootstrap(m,sp,n=50)
         fits[g]=dict(model=m,spill=sp,others=list(others),ci=ci)
         c=m.components()
         lbstat,p_lb,_=ljung_box(m.resid_log_)
