@@ -143,32 +143,56 @@ def plot_wilds_tu_multiplier(panels, fits):
     wilds_panel = panels[TEST]
     c = wilds_model.components()
     
-    fig, ax = plt.subplots(1, 1, figsize=(12, 6), facecolor=DARK)
-    _style(ax)
+    # Debug: print first few values
+    print(f"\n[DEBUG] Wilds TU multiplier data:")
+    print(f"  t: {c['t'][:5]}")
+    print(f"  base: {c['base'][:5]}")
+    print(f"  L1: {c['L1'][:5]}")
+    print(f"  TU γ={c['tu_g']:.2f}, HL={c['hl_tu']:.1f}mo")
     
-    # Get TU events for Wilds
-    tu_events = wilds_panel.attrs["tu"]
+    fig, axes = plt.subplots(2, 1, figsize=(12, 10), facecolor=DARK)
     
-    # Calculate the TU multiplier: (L1 / base) = 1 + events
+    # Plot 1: TU Multiplier (L1/base)
+    ax1 = axes[0]
+    _style(ax1)
+    
     base = c["base"]
-    tu_multiplier = c["L1"] / np.maximum(base, 1)  # Avoid division by zero
+    tu_multiplier = c["L1"] / np.maximum(base, 1)
     
-    # Plot the multiplier
-    ax.plot(c["t"], tu_multiplier, color=GAMES[TEST]["color"], lw=2, label="TU multiplier")
-    ax.axhline(1.0, color="#888", lw=1, ls="--", label="Baseline (no TU effect)")
+    ax1.plot(c["t"], tu_multiplier, color=GAMES[TEST]["color"], lw=2, label="TU multiplier (L1/base)")
+    ax1.axhline(1.0, color="#888", lw=1, ls="--", label="Baseline (no effect)")
     
     # Mark TU events
     for nm, offset, kind in EVENTS.get(TEST, []):
         if kind in {"title_update", "collab", "event"}:
-            ax.axvline(offset, color="#9b9bd0", lw=1, ls=":", alpha=0.7)
-            ax.text(offset, ax.get_ylim()[1] * 0.95, f" {nm}", 
+            ax1.axvline(offset, color="#9b9bd0", lw=1, ls=":", alpha=0.7)
+            ax1.text(offset, ax1.get_ylim()[1] * 0.95, f" {nm}", 
                     color="#9b9bd0", fontsize=8, rotation=90, va="top", ha="left")
     
-    ax.set_xlabel("Months since launch")
-    ax.set_ylabel("TU Multiplier (× baseline)")
-    ax.set_title(f"{TEST} — Title Update Multiplier Effect (γ={c['tu_g']:.2f}, HL={c['hl_tu']:.1f}mo)", 
+    ax1.set_xlabel("Months since launch")
+    ax1.set_ylabel("TU Multiplier (× baseline)")
+    ax1.set_title(f"{TEST} — TU Multiplier (γ={c['tu_g']:.2f}, HL={c['hl_tu']:.1f}mo)", 
                   fontweight="bold", loc="left")
-    ax.legend(fontsize=8, facecolor="#1c1c24", edgecolor="#444", labelcolor=TXT)
+    ax1.legend(fontsize=8, facecolor="#1c1c24", edgecolor="#444", labelcolor=TXT)
+    ax1.set_ylim(0.8, 2.0)  # Force reasonable y-axis limits
+    
+    # Plot 2: Components breakdown
+    ax2 = axes[1]
+    _style(ax2)
+    ax2.fill_between(c["t"], 0, c["core"], color="#e07b39", alpha=0.5, label="core")
+    ax2.fill_between(c["t"], c["core"], c["base"], color="#ffd27f", alpha=0.4, label="launch")
+    ax2.fill_between(c["t"], c["base"], c["L1"], color="#9b7fe0", alpha=0.55, label="events (TU)")
+    ax2.plot(c["t"], wilds_panel["avg_players"].values, color="white", lw=1.5, label="actual")
+    ax2.plot(c["t"], wilds_model.pred_, color="white", lw=1.0, ls="--", alpha=0.8, label="model")
+    
+    for nm, offset, kind in EVENTS.get(TEST, []):
+        if kind in {"title_update", "collab", "event"}:
+            ax2.axvline(offset, color="#9b9bd0", lw=1, ls=":", alpha=0.7)
+    
+    ax2.set_xlabel("Months since launch")
+    ax2.set_ylabel("Avg Concurrent Players")
+    ax2.set_title(f"{TEST} — Components Breakdown", fontweight="bold", loc="left")
+    ax2.legend(fontsize=8, facecolor="#1c1c24", edgecolor="#444", labelcolor=TXT)
     
     plt.tight_layout()
     plt.savefig("wilds_tu_multiplier.png", dpi=150, facecolor=DARK, bbox_inches="tight")
