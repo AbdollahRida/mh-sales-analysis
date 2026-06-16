@@ -157,7 +157,9 @@ def plot_wilds_tu_multiplier(panels, fits):
     _style(ax1)
     
     base = c["base"]
-    tu_multiplier = c["L1"] / np.maximum(base, 1)
+    # Avoid division by zero - use a small epsilon for near-zero base values
+    epsilon = 1.0  # Minimum base value to avoid division issues
+    tu_multiplier = c["L1"] / np.maximum(base, epsilon)
     
     ax1.plot(c["t"], tu_multiplier, color=GAMES[TEST]["color"], lw=2, label="TU multiplier (L1/base)")
     ax1.axhline(1.0, color="#888", lw=1, ls="--", label="Baseline (no effect)")
@@ -551,7 +553,7 @@ def run(keep_partial=True, log_scale=True, sale_model=None):
     print(f"\n{TEST}  R²={wilds_model.r2_:.3f}  AIC={wilds_model.aic_:.0f}  BIC={wilds_model.bic_:.0f}  "
           f"RMSE_log={wilds_model.rmse_log_:.3f}  (n={len(wilds_panel)} through {wilds_panel['date'].max():%b %Y})")
     print(f"  core β={wilds_ci['beta'][1]:,.0f} [{wilds_ci['beta'][0]:,.0f},{wilds_ci['beta'][2]:,.0f}]  "
-          f"λ HL={np.log(2)/wilds_ci['lam'][1]:.1f}mo  launch L0={wilds_c['L0']:,.0f}")
+          f"λ HL={np.log(2)/wilds_ci['lam'][1]:.1f}mo  launch L0={wilds_c['L0']:,.0f} (HL={wilds_c['hl_launch']:.1f}mo)")
     print(f"  DLC γ={[f'{x:.1f}' for x in wilds_c['dlc_g']]}  "
           f"TU γ={wilds_c['tu_g']:.2f} [{wilds_ci['tu_g'][0]:.2f},{wilds_ci['tu_g'][2]:.2f}] (HL {wilds_c['hl_tu']:.1f}mo)  φ_sale={wilds_c['phi']:.2f}")
     print(f"  spill: "+", ".join(f"{k}={v:+.2f}" for k,v in zip(wilds_others,wilds_c['thetas'])))
