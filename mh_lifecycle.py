@@ -56,7 +56,16 @@ def _read(path):
 def event_offsets(game, kinds=None):
     launch = pd.Timestamp(GAMES[game]["launch"])
     out = []
-    for nm, dt, kind in EVENTS.get(game, []):
+    for event in EVENTS.get(game, []):
+        # Handle both old format (name, date, kind) and new format (date, type, desc)
+        if len(event) == 3:
+            if isinstance(event[1], str) and '-' in event[1]:  # New format: (date, type, desc)
+                dt, kind, desc = event[0], event[1], event[2]
+                nm = f"{kind} {desc}" if desc else kind
+            else:  # Old format: (name, date, kind)
+                nm, dt, kind = event[0], event[1], event[2]
+        else:
+            continue
         if kinds and kind not in kinds: continue
         d = pd.Timestamp(dt)
         out.append((nm, (d.year-launch.year)*12 + (d.month-launch.month), kind))
@@ -121,7 +130,16 @@ def all_panels(keep_partial=True):
 # ════════════════════════ DIAGNOSTICS ═══════════════════════
 def get_event_dates(game):
     """Get all event dates for a game."""
-    return {pd.Timestamp(dt) for _, dt, _ in EVENTS.get(game, [])}
+    dates = set()
+    for event in EVENTS.get(game, []):
+        # Handle both old format (name, date, kind) and new format (date, type, desc)
+        if len(event) >= 2:
+            # Check if second element is a date string (contains '-')
+            if isinstance(event[1], str) and '-' in event[1]:
+                dates.add(pd.Timestamp(event[0]))  # New format: date is first element
+            else:
+                dates.add(pd.Timestamp(event[1]))  # Old format: date is second element
+    return dates
 
 def identify_sale_only_periods(panel):
     """Identify periods with sales but no events (for clean sale effect estimation)."""
