@@ -146,9 +146,11 @@ def plot_wilds_tu_multiplier(panels, fits):
     # Debug: print first few values
     print(f"\n[DEBUG] Wilds TU multiplier data:")
     print(f"  t: {c['t'][:5]}")
+    print(f"  core: {c['core'][:5]}")
+    print(f"  launch: {c['launch'][:5]}")
     print(f"  base: {c['base'][:5]}")
     print(f"  L1: {c['L1'][:5]}")
-    print(f"  TU γ={c['tu_g']:.2f}, HL={c['hl_tu']:.1f}mo")
+    print(f"  TU γ={c['tu_g']:.2f}, HL={c['hl_tu']:.1f}mo, d0={c['d0']:.4f}")
     
     fig, axes = plt.subplots(2, 1, figsize=(12, 10), facecolor=DARK)
     
@@ -157,9 +159,13 @@ def plot_wilds_tu_multiplier(panels, fits):
     _style(ax1)
     
     base = c["base"]
-    # Avoid division by zero - use a small epsilon for near-zero base values
-    epsilon = 1.0  # Minimum base value to avoid division issues
-    tu_multiplier = c["L1"] / np.maximum(base, epsilon)
+    # Use core as the baseline for multiplier to avoid launch decay issues
+    # TU multiplier = (base + events) / base = 1 + (events / base)
+    # But L1 = base * (1 + events), so L1/base = 1 + events
+    # This is correct, but if base is near zero, we need to handle it
+    # Use max(base, core) to ensure we don't divide by near-zero values
+    safe_base = np.maximum(base, c["core"])
+    tu_multiplier = c["L1"] / safe_base
     
     ax1.plot(c["t"], tu_multiplier, color=GAMES[TEST]["color"], lw=2, label="TU multiplier (L1/base)")
     ax1.axhline(1.0, color="#888", lw=1, ls="--", label="Baseline (no effect)")
@@ -181,9 +187,14 @@ def plot_wilds_tu_multiplier(panels, fits):
     # Plot 2: Components breakdown
     ax2 = axes[1]
     _style(ax2)
+    # Stack: core, then launch, then events (TU), then sale, then spillover
     ax2.fill_between(c["t"], 0, c["core"], color="#e07b39", alpha=0.5, label="core")
     ax2.fill_between(c["t"], c["core"], c["base"], color="#ffd27f", alpha=0.4, label="launch")
     ax2.fill_between(c["t"], c["base"], c["L1"], color="#9b7fe0", alpha=0.55, label="events (TU)")
+    if 'L2' in c:
+        ax2.fill_between(c["t"], c["L1"], c["L2"], color="#5fd0a0", alpha=0.4, label="sale")
+    if 'L3' in c:
+        ax2.fill_between(c["t"], c.get("L2", c["L1"]), c["L3"], color="#d0607f", alpha=0.3, label="spillover")
     ax2.plot(c["t"], wilds_panel["avg_players"].values, color="white", lw=1.5, label="actual")
     ax2.plot(c["t"], wilds_model.pred_, color="white", lw=1.0, ls="--", alpha=0.8, label="model")
     
@@ -553,7 +564,7 @@ def run(keep_partial=True, log_scale=True, sale_model=None):
     print(f"\n{TEST}  R²={wilds_model.r2_:.3f}  AIC={wilds_model.aic_:.0f}  BIC={wilds_model.bic_:.0f}  "
           f"RMSE_log={wilds_model.rmse_log_:.3f}  (n={len(wilds_panel)} through {wilds_panel['date'].max():%b %Y})")
     print(f"  core β={wilds_ci['beta'][1]:,.0f} [{wilds_ci['beta'][0]:,.0f},{wilds_ci['beta'][2]:,.0f}]  "
-          f"λ HL={np.log(2)/wilds_ci['lam'][1]:.1f}mo  launch L0={wilds_c['L0']:,.0f} (HL={wilds_c['hl_launch']:.1f}mo)")
+          f"λ HL={np.log(2)/wilds_ci['lam'][1]:.1f}mo  launch L0={wilds_c['L0']:,.0f} (HL={wilds_c['hl_launch']:.1f}mo)  d0={wilds_c['d0']:.4f}")
     print(f"  DLC γ={[f'{x:.1f}' for x in wilds_c['dlc_g']]}  "
           f"TU γ={wilds_c['tu_g']:.2f} [{wilds_ci['tu_g'][0]:.2f},{wilds_ci['tu_g'][2]:.2f}] (HL {wilds_c['hl_tu']:.1f}mo)  φ_sale={wilds_c['phi']:.2f}")
     print(f"  spill: "+", ".join(f"{k}={v:+.2f}" for k,v in zip(wilds_others,wilds_c['thetas'])))
