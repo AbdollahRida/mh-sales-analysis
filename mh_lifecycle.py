@@ -130,6 +130,51 @@ def identify_sale_only_periods(panel):
     sale_only_mask = (panel["discount_pct"] > 0.1) & (~panel["date"].isin(event_dates))
     return panel[sale_only_mask]
 
+def plot_wilds_tu_multiplier(panels, fits):
+    """Generate plot showing Wilds TU multiplier effect."""
+    plt.style.use("dark_background")
+    
+    if TEST not in fits:
+        print("Wilds not fitted, skipping TU multiplier plot")
+        return
+    
+    wilds_fit = fits[TEST]
+    wilds_model = wilds_fit["model"]
+    wilds_panel = panels[TEST]
+    c = wilds_model.components()
+    
+    fig, ax = plt.subplots(1, 1, figsize=(12, 6), facecolor=DARK)
+    _style(ax)
+    
+    # Get TU events for Wilds
+    tu_events = wilds_panel.attrs["tu"]
+    
+    # Calculate the TU multiplier: (L1 / base) = 1 + events
+    base = c["base"]
+    tu_multiplier = c["L1"] / np.maximum(base, 1)  # Avoid division by zero
+    
+    # Plot the multiplier
+    ax.plot(c["t"], tu_multiplier, color=GAMES[TEST]["color"], lw=2, label="TU multiplier")
+    ax.axhline(1.0, color="#888", lw=1, ls="--", label="Baseline (no TU effect)")
+    
+    # Mark TU events
+    for nm, offset, kind in EVENTS.get(TEST, []):
+        if kind in {"title_update", "collab", "event"}:
+            ax.axvline(offset, color="#9b9bd0", lw=1, ls=":", alpha=0.7)
+            ax.text(offset, ax.get_ylim()[1] * 0.95, f" {nm}", 
+                    color="#9b9bd0", fontsize=8, rotation=90, va="top", ha="left")
+    
+    ax.set_xlabel("Months since launch")
+    ax.set_ylabel("TU Multiplier (× baseline)")
+    ax.set_title(f"{TEST} — Title Update Multiplier Effect (γ={c['tu_g']:.2f}, HL={c['hl_tu']:.1f}mo)", 
+                  fontweight="bold", loc="left")
+    ax.legend(fontsize=8, facecolor="#1c1c24", edgecolor="#444", labelcolor=TXT)
+    
+    plt.tight_layout()
+    plt.savefig("wilds_tu_multiplier.png", dpi=150, facecolor=DARK, bbox_inches="tight")
+    print("\n✅ saved wilds_tu_multiplier.png")
+
+
 def plot_sale_diagnostics(panels, fits):
     """Generate diagnostic plots for sale effects."""
     plt.style.use("dark_background")
@@ -469,7 +514,28 @@ def run(keep_partial=True, log_scale=True, sale_model=None):
         
         fits[g]["diag"]=dict(lb_p=p_lb)
 
-    # held-out
+    # Fit Wilds model separately to extract its parameters
+    print("\n" + "="*64 + "\nFitting Wilds model separately...")
+    wilds_panel = panels[TEST]
+    wilds_others = {k:v for k,v in panels.items() if k!=TEST and v["t"].min()<=wilds_panel["t"].max()}
+    wilds_sp = build_spillover(wilds_panel, wilds_others)
+    wilds_model = MHModel(wilds_panel).fit(spill=wilds_sp)
+    wilds_ci = bootstrap(wilds_model, wilds_sp, n=250)
+    wilds_c = wilds_model.components()
+    wilds_lb, wilds_p_lb, _ = ljung_box(wilds_model.resid_log_)
+    
+    print(f"\n{TEST}  R²={wilds_model.r2_:.3f}  AIC={wilds_model.aic_:.0f}  BIC={wilds_model.bic_:.0f}  "
+          f"RMSE_log={wilds_model.rmse_log_:.3f}  (n={len(wilds_panel)} through {wilds_panel['date'].max():%b %Y})")
+    print(f"  core β={wilds_ci['beta'][1]:,.0f} [{wilds_ci['beta'][0]:,.0f},{wilds_ci['beta'][2]:,.0f}]  "
+          f"λ HL={np.log(2)/wilds_ci['lam'][1]:.1f}mo  launch L0={wilds_c['L0']:,.0f}")
+    print(f"  DLC γ={[f'{x:.1f}' for x in wilds_c['dlc_g']]}  "
+          f"TU γ={wilds_c['tu_g']:.2f} [{wilds_ci['tu_g'][0]:.2f},{wilds_ci['tu_g'][2]:.2f}] (HL {wilds_c['hl_tu']:.1f}mo)  φ_sale={wilds_c['phi']:.2f}")
+    print(f"  spill: "+", ".join(f"{k}={v:+.2f}" for k,v in zip(wilds_others,wilds_c['thetas'])))
+    print(f"  Ljung-Box p={wilds_p_lb:.3f} {'(autocorrelated residuals)' if wilds_p_lb<.05 else '(clean)'}")
+    
+    fits[TEST] = dict(model=wilds_model, spill=wilds_sp, others=list(wilds_others), ci=wilds_ci)
+
+    # held-out comparison using World's template
     wp=panels[TEST]; wt=wp["t"].values.astype(float); wy=wp["avg_players"].values.astype(float)
     wc=fits["World"]["model"].components()
     shape=_core(wt,wc["alpha"],wc["beta"],wc["lam"])+_launch(wt,wc["L0"],wc["d0"])
@@ -657,3 +723,6 @@ if __name__=="__main__":
     
     # Generate sale diagnostics
     plot_sale_diagnostics(panels, fits)
+    
+    # Generate Wilds TU multiplier plot
+    plot_wilds_tu_multiplier(panels, fits)
