@@ -6,31 +6,72 @@ Rise launched on Steam (Jan 2022) with all base content already included.
 """
 EVENTS = {
     "World": [
-        ("Witcher collab",   "2019-05-17", "collab"),        # Geralt/Leshen on PC
-        ("Iceborne",         "2020-01-09", "dlc"),            # PC expansion
-        ("TU1 Rajang",       "2020-02-06", "title_update"),
-        ("TU2 Stygian/Safi", "2020-03-12", "title_update"),
-        ("TU3 Raging/Furious","2020-04-09", "title_update"),
-        ("TU4 Alatreon",     "2020-07-09", "title_update"),
-        ("TU5 Fatalis",      "2020-10-01", "title_update"),   # final major update
-    ],
-    "Rise": [
-        ("Sunbreak",         "2022-06-30", "dlc"),            # PC expansion
-        ("SB TU1",           "2022-08-10", "title_update"),   # Seething Bazel, etc.
-        ("SB TU2",           "2022-09-29", "title_update"),   # Flaming Espinas, etc.
-        ("SB TU3 Chaotic Gore","2022-11-24","title_update"),
-        ("SB TU4 Velkhana",  "2023-02-07", "title_update"),
-        ("SB TU5 Amatsu",    "2023-04-20", "title_update"),
-        ("SB Final Malzeno", "2023-06-08", "title_update"),   # Primordial Malzeno, finale
-    ],
+    # --- BASE MONSTER HUNTER: WORLD ERA ---
+    ("2018-01-26", "release", "Base Monster Hunter: World Console Launch (PS4 & Xbox One)"),
+    ("2018-03-22", "TU", "Title Update 1 (Ver. 2.00): Deviljho Added"),
+    ("2018-04-19", "event", "Ver. 3.00: Kulve Taroth Siege Quest & El Dorado Locale"),
+    ("2018-05-31", "TU", "Title Update 2 (Ver. 4.00): Lunastra Added"),
+    ("2018-08-02", "event", "Ver. 5.00: Final Fantasy XIV Collab (Behemoth Added)"),
+    ("2018-08-09", "release", "Base Monster Hunter: World PC Launch (Steam)"),
+    ("2019-02-08", "event", "Ver. 6.00: The Witcher 3: Wild Hunt Collab (Leshen Added)"),
+    ("2019-05-11", "patch", "Ver. 6.02: Arch-Tempered Nergigante (Final Base World Monster)"),
+
+    # --- ICEBORNE EXPANSION ERA (Console Launch & Sync Cycle) ---
+    ("2019-09-06", "release", "Monster Hunter World: Iceborne Console Expansion Launch"),
+    ("2019-10-10", "TU", "Iceborne TU 1 (Ver. 11.00): Rajang & Volcanic Guiding Lands Zone"),
+    ("2019-12-05", "TU", "Iceborne TU 2 (Ver. 12.00): Stygian Zinogre, Tundra Zone, & Safi'jiiva Recon"),
+    ("2019-12-13", "event", "Safi'jiiva Siege Quest Officially Opens"),
+    ("2020-01-09", "release", "Monster Hunter World: Iceborne PC (Steam) Expansion Launch"),
+    ("2020-03-23", "TU", "Iceborne TU 3 (Ver. 13.00): Raging Brachydios & Furious Rajang"),
+    ("2020-04-23", "patch", "Ver. 13.50: Master Rank Kulve Taroth & Namielle Arch-Tempered"),
+    ("2020-07-09", "TU", "Iceborne TU 4 (Ver. 14.00): Alatreon Added (Delayed from May due to COVID-19)"),
+    ("2020-10-01", "TU", "Iceborne TU 5 (Ver. 15.00): Fatalis, Arch-Tempered Velkhana (Final Content Patch)"),
+    
+    # --- POST-CONTENT MAINTENANCE & PERMANENCE ---
+    ("2020-12-04", "event", "Ver. 15.10: Artemis 'Monster Hunter Movie' Collab (Later Retired)"),
+    ("2021-01-01", "patch", "Ver. 15.11: Major Event Quest Cycle Automations (All festivals made permanent rotation)"),
+    ("2023-12-01", "patch", "Steam Deck Compatibility / Modern OS Balance Adjustments")
+],
+    "Rise":  [
+    ("2021-03-26", "release", "Base Monster Hunter Rise Nintendo Switch Launch"),
+    ("2021-04-28", "patch", "Update 2.0"),
+    ("2021-05-27", "patch", "Update 3.0"),
+    ("2021-06-24", "patch", "Update 3.1"),
+    ("2021-07-29", "patch", "Update 3.2"),
+    ("2021-08-26", "patch", "Update 3.3"),
+    ("2021-09-24", "event", "CAPCOM Collab 4: Megaman 11, Sunbreak Announced"),
+    ("2021-10-01", "patch", "Update 3.4"),
+    ("2021-10-28", "patch", "Update 3.5"),
+    ("2021-10-29", "event", "CAPCOM Collab 5: Ghosts 'n Goblins Resurrection Collab Event"),
+    ("2021-11-25", "event", "Update 3.6, Sega: Sonic 30th Anniversary Collab Event"),
+    ("2021-12-20", "patch", "Update 3.7"),
+    ("2022-01-12", "release", "PC Release"),
+    ("2022-01-21", "event", "USJ Collab"),
+    ("2022-01-27", "patch", "Update 3.8 (Switch)"),
+    ("2022-02-24", "patch", "Update 3.9 (Switch & PC)"),
+    ("2022-03-31", "patch", "Update 3.10 (Switch)"),
+    ("2022-06-30", "TU", "Update 10.0 (Sunbreak Expansion Launch)"),
+    ("2022-08-10", "TU", "Update 11.0 (Title Update 1)"),
+    ("2022-09-29", "TU", "Update 12.0 (Title Update 2)"),
+    ("2022-11-24", "TU", "Update 13.0 (Title Update 3)"),
+    ("2023-01-20", "release", "PlayStation & Xbox Base Game Launch"),
+    ("2023-02-07", "TU", "Update 14.0 (Title Update 4)"),
+    ("2023-04-20", "TU", "Update 15.0 (Title Update 5)"),
+    ("2023-06-08", "TU", "Update 16.0 / 16.0.2 (Bonus Update / Final Content Patch)")
+],
     "Wilds": [
-        ("TU1 Mizutsune",    "2025-04-04", "title_update"),
-        ("SF6 collab",       "2025-05-28", "collab"),         # Street Fighter 6 / Akuma
-        ("TU2 Lagiacrus",    "2025-06-30", "title_update"),
-        ("TU3 FFXIV/Omega",  "2025-09-29", "title_update"),   # Final Fantasy XIV collab
-        ("TU4 Gogmazios",    "2025-12-16", "title_update"),
-        ("AT Arkveld (Feb)", "2026-02-10", "title_update"),   # Feb 2026 update
-        ("Expansion reveal", "2026-06-06", "event"),          # SGF reveal (approx)
+        ("2025-04-03", "TU", "Title Update 1 Ver 1.01"),
+        ("2025-04-22", "event", "Festival of Accord: Blossomdance"),
+        ("2025-04-29", "event", "Arch-Tempered Rey Dau, Gamma Armor Sets"),
+        ("2025-05-07", "event", "Free Challenge Quests"),
+        ("2025-05-27", "patch", "Version 1.011 Patch Notes"),
+        ("2025-06-30", "TU", "Title Update 2 Ver 1.02"),
+        ("2025-07-22", "event", "Festival of Accord: Flamefete, Arch-tempered Uth Duna"),
+        ("2025-08-12", "patch", "Version 1.021/1.021.01/1.021.02"),
+        ("2025-08-26", "event", "Fender Special Collaboration"),
+        ("2025-09-29", "TU", "Title Update 3"),
+        ("2025-12-15", "TU", "Title Update 4"),
+        ("2026-02-17", "patch", "Version 1.041 Patch Notes")
     ],
 }
 
